@@ -3,7 +3,9 @@ package my.fun.asyncload.imageloader.utils;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -133,5 +135,24 @@ public class BitmapUtils {
 
     public static String generateKeyByHash(String keyString) {
         return String.valueOf(keyString.hashCode());
+    }
+
+    public static InputStream getVideoThumbInputStream(String filePath){
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(filePath);
+        Bitmap bitmap = retriever.getFrameAtTime();
+        return getStreamFromBitmap(bitmap);
+    }
+
+    public static  InputStream getStreamFromBitmap(Bitmap bitmap){
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(DisplayOption.DEFAULT_COMPRESS_FORMAT, DisplayOption.DEFAULT_COMPRESS_QUALITY, byteArrayOutputStream);
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        try {
+            byteArrayOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return byteArrayInputStream;
     }
 }

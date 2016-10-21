@@ -1,6 +1,7 @@
 package my.fun.asyncload.imageloader.core;
 
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -12,6 +13,9 @@ import my.fun.asyncload.imageloader.model.Scheme;
  */
 public class DisplayOption {
     private final String TAG = this.getClass().toString();
+    public final static Bitmap.CompressFormat DEFAULT_COMPRESS_FORMAT = Bitmap.CompressFormat.PNG;
+    public final static int DEFAULT_COMPRESS_QUALITY = 100;
+
     private int resId;
     private ImageSize imageSize;
     private boolean cacheInMem = true;
@@ -19,6 +23,8 @@ public class DisplayOption {
     private Resources resources;
     private ImageView imageView;
     private String data;
+    private Bitmap.CompressFormat compressFormat;
+    private int compressQuality;
 
     private DisplayOption(DisplayOption.Builder builder) {
         this.imageView = builder.imageView;
@@ -28,6 +34,8 @@ public class DisplayOption {
         this.cacheInMem = builder.cacheInMem;
         this.cacheOnDisk = builder.cacheOnDisk;
         this.data = builder.data;
+        this.compressFormat = builder.compressFormat;
+        this.compressQuality = builder.compressQuality;
 
         if (Scheme.ofScheme(data) == Scheme.UNKNOWN) {
             throw new IllegalArgumentException("illegal data: " + data + " for imageLoaderTask executor");
@@ -75,14 +83,14 @@ public class DisplayOption {
     }
 
     @Override
-    public boolean equals(Object o){
-        if (o!=null && o instanceof DisplayOption) {
+    public boolean equals(Object o) {
+        if (o != null && o instanceof DisplayOption) {
             DisplayOption option = (DisplayOption) o;
             if (option.getResId() == resId && option.getImageSize().equals(imageSize)
-                     && option.data.equals(data))
+                    && option.data.equals(data))
                 return true;
         }
-        return  false;
+        return false;
     }
 
     /**
@@ -96,8 +104,10 @@ public class DisplayOption {
         private Resources resources;
         private ImageView imageView;
         private String data;
+        private Bitmap.CompressFormat compressFormat = DEFAULT_COMPRESS_FORMAT;
+        private int compressQuality = DEFAULT_COMPRESS_QUALITY;
 
-        // set image holder
+        // set image view
         public Builder setImageView(ImageView imageView) {
             this.imageView = imageView;
             return this;
@@ -137,6 +147,15 @@ public class DisplayOption {
             return this;
         }
 
+        public Builder setCompressFormat(Bitmap.CompressFormat format) {
+            this.compressFormat = format;
+            return this;
+        }
+
+        public Builder setCompressQuality(int quality) {
+            this.compressQuality = quality;
+            return this;
+        }
         // Create the DisplayOption
         public DisplayOption build() {
             return new DisplayOption(this);

@@ -24,6 +24,7 @@ public class ImageLoaderConfiguration {
     // disk cache size - (in bytes)
     private long diskCacheSize;
     private String diskCacheFolder = "";
+//    private Context appContext;
 
     private LruCache<String, Bitmap> memLruCache;
     private DiskLruCache diskLruCache;
@@ -37,6 +38,7 @@ public class ImageLoaderConfiguration {
         this.memCacheInPercent = builder.memCacheInPercent;
         this.diskCacheSize = builder.diskCacheSize;
         this.diskCacheFolder = builder.diskCacheFolder;
+//        this.appContext = builder.context;
 
         memLruCache = MemCacheUtils.getMemCache(memCacheSize);
         try {

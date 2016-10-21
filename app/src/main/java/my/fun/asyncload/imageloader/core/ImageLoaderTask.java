@@ -19,6 +19,7 @@ import my.fun.asyncload.imageloader.disklrucache.DiskLruCache;
 import my.fun.asyncload.imageloader.model.AsyncDrawable;
 import my.fun.asyncload.imageloader.model.Scheme;
 import my.fun.asyncload.imageloader.utils.BitmapUtils;
+import my.fun.asyncload.imageloader.utils.Utils;
 
 
 /**
@@ -64,10 +65,12 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
             // if find in cache, then return
             if (bitmap != null)
                 return bitmap;
-            // not in cache, continue get bitmap
+            // not in cache, continue to get bitmap
             InputStream inputStream = null;
             try {
+                // according to the uri get inputStream
                 inputStream = getBitmapInputStreamFromUri(uri, null);
+                // decode the inputStream to get bitmap
                 bitmap = BitmapUtils.decodeSampleBitmapFromStream(inputStream, displayOption);
                 if (displayOption.isCacheInMem())
                     addBitmapToMemCache(key, bitmap);
@@ -85,7 +88,6 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
                     e.printStackTrace();
                 }
             }
-//            addBitmapToMemCache(uri, bitmap);
             return bitmap;
         }
         return null;
@@ -167,7 +169,6 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
         return null;
     }
 
-
     @SuppressWarnings("unchecked")
     private ImageLoaderTask getImageLoaderTask(ImageView imageView) {
         if (imageView != null) {
@@ -196,7 +197,13 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
 
     private InputStream getBitmapInputStreamFromFile(String uri, Object extra) throws FileNotFoundException {
         String filePath = Scheme.FILE.crop(uri);
-        return new BufferedInputStream(new FileInputStream(new File(filePath)));
+        String mimeType = Utils.getMimeType(new File(filePath));
+
+        if (mimeType.startsWith("video")){
+            return BitmapUtils.getVideoThumbInputStream(filePath);
+        }else {
+            return new BufferedInputStream(new FileInputStream(new File(filePath)));
+        }
     }
 
     private InputStream getBitmapFromNetwork(String uri, Object extra) {
