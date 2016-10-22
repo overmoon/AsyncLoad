@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AsyncLoad.iml" filepath="$PROJECT_DIR$/AsyncLoad.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/asyncload_lib/asyncload_lib.iml" filepath="$PROJECT_DIR$/asyncload_lib/asyncload_lib.iml" />
     </modules>
   </component>
 </project>
