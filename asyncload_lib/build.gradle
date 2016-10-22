@@ -26,12 +26,12 @@ dependencies {
 
 def SDK_BASENAME = "asyncload_lib";
 def SDK_VERSION_pre = "_v1.0.1";
-def SDK_VERSION_now= "_v1.0.1";
+def SDK_VERSION_now= "_v1.0.2";
 def sdkDestinationPath = "../";
-def jar_Folder = "asyncload_lib_jar"
+def jar_Folder = "asyncload_lib_jar/"
 
 task deleteBuild(type: Delete) {
-    delete sdkDestinationPath + SDK_BASENAME + SDK_VERSION_pre + ".jar"
+    delete sdkDestinationPath+ jar_Folder + SDK_BASENAME + SDK_VERSION_pre + ".jar"
 }
 
 task makeJar(type: Copy) {
