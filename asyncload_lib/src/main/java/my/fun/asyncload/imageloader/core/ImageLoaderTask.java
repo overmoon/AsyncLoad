@@ -13,7 +13,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.net.URLDecoder;
 
 import my.fun.asyncload.imageloader.disklrucache.DiskLruCache;
 import my.fun.asyncload.imageloader.model.AsyncDrawable;
@@ -180,7 +182,7 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
         return null;
     }
 
-    public InputStream getBitmapInputStreamFromUri(String uri, Object extra) throws FileNotFoundException {
+    public InputStream getBitmapInputStreamFromUri(String uri, Object extra) throws FileNotFoundException, UnsupportedEncodingException {
         switch (Scheme.ofScheme(uri)) {
             case HTTP:
             case HTTPS:
@@ -195,10 +197,13 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
         }
     }
 
-    private InputStream getBitmapInputStreamFromFile(String uri, Object extra) throws FileNotFoundException {
+    private InputStream getBitmapInputStreamFromFile(String uri, Object extra) throws FileNotFoundException, UnsupportedEncodingException {
         String filePath = Scheme.FILE.crop(uri);
         String mimeType = Utils.getMimeType(new File(filePath));
-
+        // if file not exists, maybe because the encode problem, like chinese
+        if (!new File(filePath).exists()){
+            filePath = URLDecoder.decode(filePath,"UTF-8");
+        }
         if (mimeType.startsWith("video")){
             return BitmapUtils.getVideoThumbInputStream(filePath);
         }else {
