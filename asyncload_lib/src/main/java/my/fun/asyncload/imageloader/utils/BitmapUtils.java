@@ -7,10 +7,16 @@ import android.media.MediaMetadataRetriever;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.ref.WeakReference;
 
 import my.fun.asyncload.imageloader.core.DisplayOption;
+import my.fun.asyncload.imageloader.disklrucache.DiskLruCache;
 import my.fun.asyncload.imageloader.model.ImageSize;
 
 /**
@@ -66,6 +72,9 @@ public class BitmapUtils {
     }
 
     public static Bitmap decodeSampleBitmapFromStream(InputStream inputStream, DisplayOption displayOption) throws IOException {
+        if (inputStream == null) {
+            return null;
+        }
         byte[] bytes = getBytesFromStream(inputStream);
         return decodeSampleBitmapFromByteArray(bytes, displayOption);
     }
@@ -87,7 +96,7 @@ public class BitmapUtils {
         BitmapFactory.Options options = new BitmapFactory.Options();
         ImageSize imageSize = displayOption.getImageSize();
         // if imageSize not null, will scale the image
-        if (imageSize != null && imageSize.getSize()!=0) {
+        if (imageSize != null && imageSize.getSize() != 0) {
             float scale = DensityUtils.getScale(displayOption.getResources());
             int reqWidth = (int) (imageSize.getmWidth() * scale);
             int reqHeight = (int) (imageSize.getmHeight() * scale);
@@ -108,7 +117,7 @@ public class BitmapUtils {
         final int height = options.outHeight;
         int inSampleSzie = 1;
 
-        //当宽、高大于要求的值时，缩小一倍
+        //当宽或高大于要求的值时，缩小一倍
         while (width / inSampleSzie > reqWidth || height / inSampleSzie > reqHeight) {
             inSampleSzie *= 2;
         }
@@ -124,35 +133,71 @@ public class BitmapUtils {
         return BitmapFactory.decodeStream(inputStream);
     }
 
-    // eg. file://xxxxxx.xxx_36x36
-    public static String generateKeyString(String uri, ImageSize imageSize) {
-        return new StringBuffer().append(uri).append(URI_AND_SIZE_SEPARATOR).append(imageSize.toString()).toString();
-    }
-
-    public static String generateKeyByHash(String uri, ImageSize imageSize) {
-        return String.valueOf(generateKeyString(uri, imageSize).hashCode());
-    }
-
-    public static String generateKeyByHash(String keyString) {
-        return String.valueOf(keyString.hashCode());
-    }
-
-    public static InputStream getVideoThumbInputStream(String filePath){
+    public static InputStream getVideoThumbInputStream(String filePath) {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(filePath);
         Bitmap bitmap = retriever.getFrameAtTime();
-        return getStreamFromBitmap(bitmap);
+        return getInArrayStreamFromBitmap(bitmap);
     }
 
-    public static  InputStream getStreamFromBitmap(Bitmap bitmap){
+    public static InputStream getInArrayStreamFromBitmap(Bitmap bitmap) {
+        ByteArrayOutputStream byo = (ByteArrayOutputStream) getOutArrayStreamFromBitmap(bitmap);
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byo.toByteArray());
+        return byteArrayInputStream;
+    }
+
+    public static ByteArrayOutputStream getOutArrayStreamFromBitmap(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         bitmap.compress(DisplayOption.DEFAULT_COMPRESS_FORMAT, DisplayOption.DEFAULT_COMPRESS_QUALITY, byteArrayOutputStream);
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-        try {
-            byteArrayOutputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        return byteArrayOutputStream;
+    }
+
+    // get the thumb file
+    public static File getVideoThumbFile(String filePath, WeakReference<DiskLruCache> diskRef) throws IOException {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(filePath);
+        Bitmap bitmap = retriever.getFrameAtTime();
+        return writeBitmapToDiskCache(bitmap, diskRef, filePath);
+    }
+
+    // store the bitmap to disk
+    public static File writeBitmapToDiskCache(Bitmap bitmap, WeakReference<DiskLruCache> diskCacheUtilsWeakReference, String filePath) throws IOException {
+        File f = null;
+        if (diskCacheUtilsWeakReference != null) {
+            DiskLruCache diskLruCache = diskCacheUtilsWeakReference.get();
+
+            if (diskLruCache != null) {
+                String key = Utils.generateKeyByHash(filePath);
+                File dir = diskLruCache.getDirectory();
+                String fileStr = new StringBuffer().append(dir.getAbsolutePath()).append(File.separator)
+                        .append(DiskCacheUtils.thumbnailPath).append(File.separator).append(key).toString();
+                f = new File(fileStr);
+                ByteArrayOutputStream o = getOutArrayStreamFromBitmap(bitmap);
+                f = BitmapUtils.writeBitmapToDisk(f, o);
+            }
         }
-        return byteArrayInputStream;
+
+        return f;
+    }
+
+    public static File writeBitmapToDisk(File file, ByteArrayOutputStream outputStream) throws IOException {
+        // if file exists, then check if it is not null
+        if (file.exists() && file.length() != 0) {
+            return file;
+        }
+        // if file not exists
+        if (outputStream != null) {
+            OutputStream fos = null;
+            // create directorys
+            if (!file.getParentFile().exists())
+                file.getParentFile().mkdirs();
+            //create file
+            file.createNewFile();
+            fos = new FileOutputStream(file);
+            outputStream.writeTo(fos);
+
+            fos.close();
+        }
+        return file;
     }
 }

@@ -31,7 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        String filePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/test_pic";
+//        String filePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/test_pic";
+        String filePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/test_video";
         File files = new File(filePath);
         String[] filenames = files.list();
         List list =new ArrayList<String>();

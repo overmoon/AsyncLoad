@@ -3,10 +3,12 @@ package my.fun.asyncload.imageloader.utils;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 
 import my.fun.asyncload.imageloader.disklrucache.DiskLruCache;
 
@@ -14,6 +16,7 @@ import my.fun.asyncload.imageloader.disklrucache.DiskLruCache;
  * Created by admin on 2016/10/13.
  */
 public class DiskCacheUtils {
+    public final static String thumbnailPath = "thumbnails";
     // default disk cache size - (50M in bytes)
     public final static long DEFAULT_DISK_CACHE_SIZE = 50 * 1024 * 1024;
     // default max size of disk
@@ -39,4 +42,6 @@ public class DiskCacheUtils {
     public static DiskLruCache getDiskLurCache(Context context, long diskCacheSize, String diskCacheFolder) throws PackageManager.NameNotFoundException, IOException {
         return DiskLruCache.open(getDiskCacheDir(context, diskCacheFolder), getAppVersion(context), 1, diskCacheSize);
     }
+
+
 }

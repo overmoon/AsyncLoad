@@ -24,10 +24,11 @@ dependencies {
     compile 'com.android.support:appcompat-v7:24.2.0'
 }
 
-def SDK_BASENAME = "asyncload_lib_jar";
-def SDK_VERSION_pre = "_v1.0";
+def SDK_BASENAME = "asyncload_lib";
+def SDK_VERSION_pre = "_v1.0.1";
 def SDK_VERSION_now= "_v1.0.1";
 def sdkDestinationPath = "../";
+def jar_Folder = "asyncload_lib_jar"
 
 task deleteBuild(type: Delete) {
     delete sdkDestinationPath + SDK_BASENAME + SDK_VERSION_pre + ".jar"
@@ -35,7 +36,7 @@ task deleteBuild(type: Delete) {
 
 task makeJar(type: Copy) {
     from('build/intermediates/bundles/release/')
-    into(sdkDestinationPath+'asyncload_lib_jar')
+    into(sdkDestinationPath+jar_Folder)
     include('classes.jar')
     rename ('classes.jar', SDK_BASENAME+SDK_VERSION_now+".jar")
 }

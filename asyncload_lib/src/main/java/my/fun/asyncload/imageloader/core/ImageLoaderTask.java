@@ -3,6 +3,7 @@ package my.fun.asyncload.imageloader.core;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.util.LruCache;
 import android.widget.ImageView;
 
@@ -29,7 +30,7 @@ import my.fun.asyncload.imageloader.utils.Utils;
  */
 public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
 
-
+    private final static String TAG = ImageLoaderTask.class.toString();
     private WeakReference<LruCache<String, Bitmap>> memCacheWeakReference;
     private WeakReference<DiskLruCache> diskCacheWeakReference;
     private WeakReference<DisplayOption> displayOptionWeakReference;
@@ -62,7 +63,7 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
                 return null;
 
             String uri = displayOption.getData();
-            String key = BitmapUtils.generateKeyByHash(uri, displayOptionWeakReference.get().getImageSize());
+            String key = Utils.generateKeyByHash(uri, displayOptionWeakReference.get().getImageSize());
             Bitmap bitmap = findUriInCache(key);
             // if find in cache, then return
             if (bitmap != null)
@@ -74,12 +75,12 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
                 inputStream = getBitmapInputStreamFromUri(uri, null);
                 // decode the inputStream to get bitmap
                 bitmap = BitmapUtils.decodeSampleBitmapFromStream(inputStream, displayOption);
-                if (displayOption.isCacheInMem())
-                    addBitmapToMemCache(key, bitmap);
-                if (displayOption.isCacheOnDisk())
-                    addBitmapToDiskCache(key, bitmap);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                if (bitmap != null) {
+                    if (displayOption.isCacheInMem())
+                        addBitmapToMemCache(key, bitmap);
+                    if (displayOption.isCacheOnDisk())
+                        addBitmapToDiskCache(key, bitmap);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -101,15 +102,22 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
     protected void onPostExecute(Bitmap bitmap) {
         if (isCancelled()) {
             bitmap = null;
+            return;
         }
 
         final DisplayOption displayOption = displayOptionWeakReference.get();
         if (displayOption != null && bitmap != null) {
             final ImageView imageView = displayOption.getImageView();
             final ImageLoaderTask imageLoaderTask = getImageLoaderTask(imageView);
-            final DisplayOption tmpOption = imageLoaderTask.getDisplayOptionWeakReference().get();
-            if (this == imageLoaderTask && displayOption.equals(tmpOption)) {
-                imageView.setImageBitmap(bitmap);
+            if (imageLoaderTask != null && imageLoaderTask == this) {
+                final WeakReference<DisplayOption> displayOptionWeakReference = imageLoaderTask.getDisplayOptionWeakReference();
+                if (displayOptionWeakReference == null) {
+                    return;
+                }
+                final DisplayOption tmpOption = displayOptionWeakReference.get();
+                if (displayOption.equals(tmpOption)) {
+                    imageView.setImageBitmap(bitmap);
+                }
             }
         }
     }
@@ -182,7 +190,7 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
         return null;
     }
 
-    public InputStream getBitmapInputStreamFromUri(String uri, Object extra) throws FileNotFoundException, UnsupportedEncodingException {
+    public InputStream getBitmapInputStreamFromUri(String uri, Object extra) throws IOException {
         switch (Scheme.ofScheme(uri)) {
             case HTTP:
             case HTTPS:
@@ -197,18 +205,24 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
         }
     }
 
-    private InputStream getBitmapInputStreamFromFile(String uri, Object extra) throws FileNotFoundException, UnsupportedEncodingException {
+    private InputStream getBitmapInputStreamFromFile(String uri, Object extra) throws IOException {
         String filePath = Scheme.FILE.crop(uri);
         String mimeType = Utils.getMimeType(new File(filePath));
         // if file not exists, maybe because the encode problem, like chinese
-        if (!new File(filePath).exists()){
-            filePath = URLDecoder.decode(filePath,"UTF-8");
+        if (!new File(filePath).exists()) {
+            filePath = URLDecoder.decode(filePath, "UTF-8");
         }
-        if (mimeType.startsWith("video")){
-            return BitmapUtils.getVideoThumbInputStream(filePath);
-        }else {
-            return new BufferedInputStream(new FileInputStream(new File(filePath)));
+        File file = null;
+        if (mimeType.startsWith("video")) {
+            file = BitmapUtils.getVideoThumbFile(filePath, diskCacheWeakReference);
+        } else {
+            file = new File(filePath);
         }
+
+        if (file != null)
+            return new BufferedInputStream(new FileInputStream(file));
+
+        return null;
     }
 
     private InputStream getBitmapFromNetwork(String uri, Object extra) {
