@@ -3,10 +3,12 @@ package my.fun.asyncload.imageloader.core;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.util.LruCache;
 
 import java.io.IOException;
+import java.util.concurrent.Executor;
 
 import my.fun.asyncload.imageloader.disklrucache.DiskLruCache;
 import my.fun.asyncload.imageloader.utils.DiskCacheUtils;
@@ -24,13 +26,16 @@ public class ImageLoaderConfiguration {
     // disk cache size - (in bytes)
     private long diskCacheSize;
     private String diskCacheFolder = "";
-//    private Context appContext;
+    //    private Context appContext;
+    public static final Executor SERIAL_EXCUTOR = AsyncTask.SERIAL_EXECUTOR;
+    public static final Executor CONCURRENT_EXCUTOR = AsyncTask.THREAD_POOL_EXECUTOR;
+    private Executor executor = SERIAL_EXCUTOR;
 
     private LruCache<String, Bitmap> memLruCache;
     private DiskLruCache diskLruCache;
 
     public ImageLoaderConfiguration(Builder builder) {
-        if (builder.context == null && diskLruCache == null){
+        if (builder.context == null && diskLruCache == null) {
             throw new IllegalArgumentException("Context and diskLruCache are all none in ImageLoaderConfiguration.builder. Can't init diskLruCache..");
         }
 
@@ -39,7 +44,9 @@ public class ImageLoaderConfiguration {
         this.diskCacheSize = builder.diskCacheSize;
         this.diskCacheFolder = builder.diskCacheFolder;
 //        this.appContext = builder.context;
-
+        if (builder.executor != null) {
+            this.executor = builder.executor;
+        }
         memLruCache = MemCacheUtils.getMemCache(memCacheSize);
         try {
             diskLruCache = DiskCacheUtils.getDiskLurCache(builder.context, diskCacheSize, diskCacheFolder);
@@ -72,6 +79,7 @@ public class ImageLoaderConfiguration {
         private String diskCacheFolder = "";
         @NonNull
         private Context context;
+        private Executor executor;
 
         private LruCache<String, Bitmap> memLruCache;
         private DiskLruCache diskLruCache;
@@ -111,8 +119,13 @@ public class ImageLoaderConfiguration {
             return this;
         }
 
+        public Builder setExecutor(Executor executor) {
+            this.executor = executor;
+            return this;
+        }
+
         public ImageLoaderConfiguration build() {
-            if (context == null && diskLruCache == null){
+            if (context == null && diskLruCache == null) {
                 throw new IllegalArgumentException("Context and diskLruCache are all none in ImageLoaderConfiguration.builder. Can't init diskLruCache..");
             }
             if (memCacheInPercent == 0 && memCacheSize == 0) {
@@ -129,5 +142,6 @@ public class ImageLoaderConfiguration {
             }
             return new ImageLoaderConfiguration(this);
         }
+
     }
 }

@@ -4,4 +4,6 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="image_view_width">36dp</dimen>
     <dimen name="image_view_height">36dp</dimen>
+
+    <dimen name="toolbar_minHeight">30dp</dimen>
 </resources>

@@ -21,6 +21,6 @@ public class MyApplication extends Application {
 
     private ImageLoaderConfiguration initImageLoaderConf(Context context) {
         return new ImageLoaderConfiguration.Builder()
-                .setContext(context).build();
+                .setContext(context).setExecutor(ImageLoaderConfiguration.CONCURRENT_EXCUTOR).build();
     }
 }

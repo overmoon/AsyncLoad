@@ -154,10 +154,41 @@ public class BitmapUtils {
 
     // get the thumb file
     public static File getVideoThumbFile(String filePath, WeakReference<DiskLruCache> diskRef) throws IOException {
-        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-        retriever.setDataSource(filePath);
-        Bitmap bitmap = retriever.getFrameAtTime();
-        return writeBitmapToDiskCache(bitmap, diskRef, filePath);
+        String thumbFilePath = getThumbFilePath(filePath, diskRef);
+        //if not exists, then create
+        if (!hasThumbFile(thumbFilePath)) {
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            retriever.setDataSource(filePath);
+            Bitmap bitmap = retriever.getFrameAtTime();
+            return writeBitmapToDiskCache(bitmap, diskRef, filePath);
+        }else{
+            // else return the file exists
+            return new File(thumbFilePath);
+        }
+    }
+
+    // generate and get the thumb file path
+    private static String getThumbFilePath(String filePath, WeakReference<DiskLruCache> diskRef) {
+        String path = "";
+        if (diskRef != null) {
+            DiskLruCache diskLruCache = diskRef.get();
+            if (diskLruCache != null) {
+                String key = Utils.generateKeyByHash(filePath);
+                File dir = diskLruCache.getDirectory();
+                path = new StringBuffer().append(dir.getAbsolutePath()).append(File.separator)
+                        .append(DiskCacheUtils.thumbnailPath).append(File.separator).append(key).toString();
+            }
+        }
+        return path;
+    }
+
+    // judge if the thumb file exists
+    private static boolean hasThumbFile(String thumbFilePath) {
+        File f = new File(thumbFilePath);
+        if (f.exists() && f.isFile() && f.length() != 0) {
+            return true;
+        }
+        return false;
     }
 
     // store the bitmap to disk

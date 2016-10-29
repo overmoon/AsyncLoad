@@ -8,6 +8,7 @@ import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.widget.ListView;
 
 import java.io.File;
@@ -29,10 +30,12 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("AsyncLoad");
+//        setSupportActionBar(toolbar);
 
-
-//        String filePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/test_pic";
-        String filePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/test_video";
+        String filePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/test_pic";
+//        String filePath = Environment.getExternalStorageDirectory().getAbsolutePath()+"/test_video";
         File files = new File(filePath);
         String[] filenames = files.list();
         List list =new ArrayList<String>();
