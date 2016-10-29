@@ -25,8 +25,8 @@ dependencies {
 }
 
 def SDK_BASENAME = "asyncload_lib";
-def SDK_VERSION_pre = "_v1.0.2";
-def SDK_VERSION_now= "_v1.0.3";
+def SDK_VERSION_pre = "_v1.0.3";
+def SDK_VERSION_now= "_v1.0.4";
 def sdkDestinationPath = "../";
 def jar_Folder = "asyncload_lib_jar/"
 

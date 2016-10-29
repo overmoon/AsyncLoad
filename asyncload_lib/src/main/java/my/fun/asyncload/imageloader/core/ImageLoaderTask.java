@@ -214,7 +214,8 @@ public class ImageLoaderTask extends AsyncTask<Object, Void, Bitmap> {
         }
         File file = null;
         if (mimeType.startsWith("video")) {
-            file = BitmapUtils.getVideoThumbFile(filePath, diskCacheWeakReference);
+//            file = BitmapUtils.getVideoThumbFile(filePath, diskCacheWeakReference);
+            return BitmapUtils.getVideoThumbInputStream(filePath);
         } else {
             file = new File(filePath);
         }
